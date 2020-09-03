@@ -1,0 +1,24 @@
+{
+  "name": "beta-samwich",
+  "version": "0.1.0",
+  "description": "Search for multiple keywords on beta.sam.gov and dedupe and export the results",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/seriouslysean/beta-samwich.git"
+  },
+  "keywords": [
+    "beta",
+    "cli",
+    "search"
+  ],
+  "author": "Sean Kennedy",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/seriouslysean/beta-samwich/issues"
+  },
+  "homepage": "https://github.com/seriouslysean/beta-samwich#readme"
+}
