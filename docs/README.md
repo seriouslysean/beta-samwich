@@ -2,7 +2,12 @@
 
 ## Introduction
 
-TODO
+Eventually search for multiple keywords on beta.sam.gov and dedupe and export all results. Right now a search is hardcoded but it will recurse throough the pages.
+
+### Todo
+
+* Dynamic keyword inclusion
+* Deduping
 
 ## Requirements
 
@@ -11,8 +16,10 @@ TODO
 
 ## Installation
 
-TODO
+* [Windows](https://docs.microsoft.com/en-us/windows/nodejs/setup-on-windows)
+* [MacOS](https://github.com/tj/n)
 
 ## Usage
 
-TODO
+* Run `npm ci` to install the dependencies
+* Run `npm run start` to run a search

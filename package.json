@@ -4,6 +4,7 @@
   "description": "Search for multiple keywords on beta.sam.gov and dedupe and export the results",
   "main": "index.js",
   "scripts": {
+    "start": "node index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -20,5 +21,14 @@
   "bugs": {
     "url": "https://github.com/seriouslysean/beta-samwich/issues"
   },
-  "homepage": "https://github.com/seriouslysean/beta-samwich#readme"
+  "homepage": "https://github.com/seriouslysean/beta-samwich#readme",
+  "dependencies": {
+    "npm": "^6.14.8",
+    "puppeteer": "^5.2.1"
+  },
+  "devDependencies": {
+    "eslint": "^7.2.0",
+    "eslint-config-airbnb-base": "^14.2.0",
+    "eslint-plugin-import": "^2.22.0"
+  }
 }
