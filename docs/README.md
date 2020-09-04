@@ -1,13 +1,6 @@
 # Beta Samwich
 
-## Introduction
-
-Eventually search for multiple keywords on beta.sam.gov and dedupe and export all results. Right now a search is hardcoded but it will recurse throough the pages.
-
-### Todo
-
-* Dynamic keyword inclusion
-* Deduping
+Beta Samwich is a tool that utilizes [Puppeteer](https://pptr.dev/) to search for multiple keywords on [beta.sam.gov](https://beta.sam.gov) and dedupe/export all results.
 
 ## Requirements
 
