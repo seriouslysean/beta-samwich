@@ -1,10 +1,13 @@
 const fs = require('fs');
 const minimist = require('minimist');
 
+const { format } = require('date-fns');
+
 const {
-    EXPORT_RESULTS,
-    EXPORT_PATH,
+    // EXPORT_BY_KEYWORD,
     EXPORT_FILENAME,
+    EXPORT_PATH,
+    EXPORT_RESULTS,
 } = require('./config');
 
 const logger = console;
@@ -80,7 +83,11 @@ function exportToFile(keyword, results) {
         return;
     }
 
-    const exportFile = `${EXPORT_PATH}/${EXPORT_FILENAME}-${toKebabCase(keyword)}.csv`;
+    // TODO use EXPORT_BY_KEYWORD to export one file or multiple files
+
+    const formattedDate = format(new Date(), 'ddMMyyyy');
+    const formattedKeyword = toKebabCase(keyword);
+    const exportFile = `${EXPORT_PATH}/${formattedDate}-${formattedKeyword}-${EXPORT_FILENAME}.csv`;
     fs.writeFile(exportFile, resultsToCsv(results), (err) => {
         if (err) {
             return logger.log('Unable to log search results to ', exportFile, err);
