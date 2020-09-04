@@ -1,5 +1,5 @@
 const sandwich = require('./src/sandwich');
-const { logger } = require('./src/data');
+const { logger } = require('./src/utils');
 const init = require('./src');
 
 // ¯\_(ツ)_/¯
