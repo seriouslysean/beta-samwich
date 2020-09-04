@@ -15,4 +15,10 @@ Beta Samwich is a tool that utilizes [Puppeteer](https://pptr.dev/) to search fo
 ## Usage
 
 * Run `npm ci` to install the dependencies
-* Run `npm run start` to run a search
+* Run `npm run start -- --keywords "foo"` to do a search
+
+You can also search for multiple keywords instead by seaprating them with a comma:
+
+* Run `npm run start -- --keywords "foo, bar, baz"` to do a search
+
+If exporting is enabled, all files will be saved in the `/output` folder, prefixed with the keyword used.
