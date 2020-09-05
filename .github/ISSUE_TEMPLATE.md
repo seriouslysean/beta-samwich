@@ -1,7 +1,6 @@
-## Bug or Feature?
+## Bug, Feature or Enhancement?
 
-- [ ] Bug
-- [ ] Feature
+Type.
 
 ## Request Details
 
