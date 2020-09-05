@@ -26,6 +26,11 @@ function toKebabCase(s) {
 function getKeywords() {
     const { keywords } = args;
 
+    // If no keywords found, default to an empty array
+    if (!keywords) {
+        return [];
+    }
+
     // If a comma exists, there is more than one keyword
     // We need to split them up
     if (keywords.includes(',')) {
