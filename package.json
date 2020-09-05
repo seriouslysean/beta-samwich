@@ -3,6 +3,9 @@
   "description": "Search for multiple keywords on beta.sam.gov and dedupe and export the results",
   "version": "0.1.0",
   "author": "Sean Kennedy",
+  "bin": {
+    "samwich": "./cli.js"
+  },
   "bugs": {
     "url": "https://github.com/seriouslysean/beta-samwich/issues"
   },
@@ -35,7 +38,7 @@
     "url": "git+https://github.com/seriouslysean/beta-samwich.git"
   },
   "scripts": {
-    "start": "node -r dotenv/config index.js",
+    "start": "node -r dotenv/config cli.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   }
 }
