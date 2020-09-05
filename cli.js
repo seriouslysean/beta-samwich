@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 const sandwich = require('./src/sandwich');
 const { logger } = require('./src/utils');
 const init = require('./src');

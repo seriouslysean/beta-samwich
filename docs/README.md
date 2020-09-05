@@ -22,3 +22,15 @@ You can also search for multiple keywords instead by seaprating them with a comm
 * Run `npm run start -- --keywords "foo, bar, baz"` to do a search
 
 If exporting is enabled, all files will be saved in the `/output` folder, prefixed with the keyword used.
+
+### Add Command to PATH (Optional)
+
+It's possible to add a `samwich` command to your PATH so you can use it globally.
+
+* Run `npm link`
+
+Use `samwich` instead of the `node run start` command above:
+
+* Run `samwich --keywords "foo, bar, baz"` to do a search
+
+To remove the symlink form your path, run `npm unlink`.
