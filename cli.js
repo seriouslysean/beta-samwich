@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+require('dotenv').config({ path: '.env' });
 
 const sandwich = require('./src/sandwich');
 const { logger } = require('./src/utils');

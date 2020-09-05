@@ -1,9 +1,15 @@
 const puppeteer = require('puppeteer');
 
-const { logger, getKeywords } = require('./utils');
+const { SEARCH_BASE_URL } = require('./config');
 const { doSearchByKeyword } = require('./search');
+const { logger, getKeywords } = require('./utils');
 
 async function init() {
+    if (!SEARCH_BASE_URL) {
+        logger.error('A Base Search Url is required to perform a search');
+        return;
+    }
+
     const keywords = getKeywords();
 
     if (!keywords.length) {

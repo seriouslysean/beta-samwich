@@ -38,7 +38,7 @@
     "url": "git+https://github.com/seriouslysean/beta-samwich.git"
   },
   "scripts": {
-    "start": "node -r dotenv/config cli.js",
+    "start": "node cli.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   }
 }
