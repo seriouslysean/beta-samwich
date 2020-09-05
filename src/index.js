@@ -8,6 +8,7 @@ async function init() {
 
     if (!keywords.length) {
         logger.error('One or more keywords are required to perform a search');
+        return;
     }
 
     // Start 'em up
