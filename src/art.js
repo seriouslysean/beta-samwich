@@ -16,4 +16,6 @@ const sandwich = `
 
 `;
 
-module.exports = sandwich;
+module.exports = {
+    sandwich,
+};

@@ -2,10 +2,7 @@ const url = require('url');
 
 const { SEARCH_BASE_URL, SEARCH_GLOBAL_DELAY } = require('./config');
 const {
-    exportToFile,
-    getLastPublishedDate,
-    getSearchQueryByKeyword,
-    logger,
+    exportToFile, getLastPublishedDate, getSearchQueryByKeyword, logger,
 } = require('./utils');
 
 // Global container for ids so we can avoid addiing duplicates
@@ -55,7 +52,7 @@ async function goToUrl(page, searchUrl) {
     // Declare document/window here to prevent eslint errors below
     let document;
     let window;
-    const data = await page.evaluate(() => {
+    const data = (await page.evaluate(() => {
         const els = Array.from(document.querySelectorAll('#search-results .row'));
 
         // If there are no results, return empty handed
@@ -91,10 +88,10 @@ async function goToUrl(page, searchUrl) {
             });
         });
         return rows;
-    });
+    })) || [];
 
     // Add this page's results to the global results
-    if (!Array.isArray(data) || !data.length) {
+    if (!data.length) {
         throw new Error('Unable to find any results');
     }
 
