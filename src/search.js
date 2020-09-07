@@ -2,9 +2,10 @@ const url = require('url');
 
 const { SEARCH_BASE_URL } = require('./config');
 const {
-    logger,
-    getSearchQueryByKeyword,
     exportToFile,
+    getLastPublishedDate,
+    getSearchQueryByKeyword,
+    logger,
 } = require('./utils');
 
 // Global container for ids so we can avoid addiing duplicates
@@ -62,10 +63,12 @@ async function goToUrl(page, searchUrl) {
     });
 
     // Add this page's results to the global results
-    if (Array.isArray(data)) {
-        logger.log('Results scraped');
-        RESULTS.push(...data);
+    if (!Array.isArray(data) || !data.length) {
+        throw new Error('Unable to find any results');
     }
+
+    logger.log('Results scraped');
+    RESULTS.push(...data);
 
     // Is there another page of results?
     // If so, grab the url and navigate to it then recursively call
@@ -92,13 +95,14 @@ async function doSearchByKeyword(page, keyword) {
     RESULTS.splice(0, RESULTS.length);
 
     // Construct the url query parameters
+    const lastPublishedDate = getLastPublishedDate();
     const searchQuery = getSearchQueryByKeyword({
         keywords: `${keyword}`,
         sort: '-modifiedDate',
         index: 'opp',
         is_active: 'true',
         page: 1, // Always start on page 1
-        opp_modified_date_filter_model: '{"timeSpan":"1"}',
+        opp_modified_date_filter_model: `{"timeSpan":"${lastPublishedDate}"}`,
         date_filter_index: 0,
         inactive_filter_values: 'false',
     });
