@@ -34,8 +34,7 @@ function getKeywords() {
     // If a comma exists, there is more than one keyword
     // We need to split them up
     if (keywords.includes(',')) {
-        return keywords.split(',')
-            .map((k) => k.trim());
+        return keywords.split(',').map((k) => k.trim());
     }
 
     // Only one keyword
@@ -98,11 +97,16 @@ function resultsToCsv(results) {
 
 function exportToFile(keyword, results) {
     if (!EXPORT_RESULTS) {
-        logger.log();
+        // Exporting not enabled
         return;
     }
 
-    if (!results) {
+    if (!Array.isArray(results)) {
+        logger.error('Results must be an array to export');
+        return;
+    }
+
+    if (!results.length) {
         logger.error('Results are required to perform an export');
         return;
     }

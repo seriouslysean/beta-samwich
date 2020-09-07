@@ -4,12 +4,13 @@
   "version": "0.1.0",
   "author": "Sean Kennedy",
   "bin": {
-    "samwich": "./cli.js"
+    "samwich": "./index.js"
   },
   "bugs": {
     "url": "https://github.com/seriouslysean/beta-samwich/issues"
   },
   "dependencies": {
+    "chalk": "^4.1.0",
     "date-fns": "^2.16.1",
     "dotenv": "^8.2.0",
     "minimist": "^1.2.5",
@@ -17,9 +18,12 @@
     "puppeteer": "^5.2.1"
   },
   "devDependencies": {
-    "eslint": "^7.2.0",
+    "eslint": "^6.8.0",
     "eslint-config-airbnb-base": "^14.2.0",
-    "eslint-plugin-import": "^2.22.0"
+    "eslint-plugin-import": "^2.22.0",
+    "prettier": "^2.1.1",
+    "prettier-eslint": "^11.0.0",
+    "prettier-eslint-cli": "^5.0.0"
   },
   "engines": {
     "node": ">=10.0.0",
@@ -39,6 +43,8 @@
   },
   "scripts": {
     "start": "node cli.js",
+    "lint": "eslint --ext .js .",
+    "lint:fix": "prettier-eslint --eslint-config-path ./.eslintrc.js --write '%INIT_CWD%/**/*.js'",
     "test": "echo \"Error: no test specified\" && exit 1"
   }
 }
