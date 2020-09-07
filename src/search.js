@@ -1,6 +1,6 @@
 const url = require('url');
 
-const { SEARCH_BASE_URL } = require('./config');
+const { SEARCH_BASE_URL, SEARCH_GLOBAL_DELAY } = require('./config');
 const {
     exportToFile,
     getLastPublishedDate,
@@ -9,8 +9,31 @@ const {
 } = require('./utils');
 
 // Global container for ids so we can avoid addiing duplicates
-const RESULTS = [];
+const RESULTS = {
+    entries: [],
+    totalPages: 0,
+};
 // const RESULT_IDS = [];
+
+function waitForGlobalDelay(page) {
+    logger.log(`> Waiting ${SEARCH_GLOBAL_DELAY}ms for the global delay`);
+    return page.waitFor(SEARCH_GLOBAL_DELAY);
+}
+
+async function getSearchUrlByPage(page, pageNumber) {
+    const currentUrl = await page.url();
+    const currentUrlParts = url.parse(currentUrl, true);
+    currentUrlParts.query.page = pageNumber;
+    // Delete the search key so the url format will ignore it
+    delete currentUrlParts.search;
+    return url.format(currentUrlParts);
+}
+
+async function getPageNumber(page) {
+    const currentUrl = await page.url();
+    const currentUrlParts = url.parse(currentUrl, true);
+    return parseInt(currentUrlParts.query.page, 10);
+}
 
 async function goToUrl(page, searchUrl) {
     // Load the initial search page
@@ -18,6 +41,14 @@ async function goToUrl(page, searchUrl) {
     // Requires the waitUntil because beta.sam is a SPA and relies on javascript
     // https://pptr.dev/#?product=Puppeteer&version=v2.1.1&show=api-pagegotourl-options
     await page.goto(searchUrl, { waitUntil: 'networkidle2' });
+    // How many pages did we actually find?
+    const currentPageNumber = await getPageNumber(page);
+    const lastPageHandle = await page.$('.usa-pagination li:nth-last-child(2) > a');
+    if (RESULTS.totalPages === 0) {
+        RESULTS.totalPages = lastPageHandle !== null
+            ? await page.evaluate((el) => el.innerText, lastPageHandle) : 1;
+    }
+    logger.log(`🔍 Searching page ${currentPageNumber} of ${RESULTS.totalPages}`);
 
     // Grab all the results on a search page (10 per page as far as I can tell)
     // and put them in the results array
@@ -67,32 +98,29 @@ async function goToUrl(page, searchUrl) {
         throw new Error('Unable to find any results');
     }
 
-    logger.log('Results scraped');
-    RESULTS.push(...data);
+    // Add results to the global results array
+    RESULTS.entries.push(...data);
 
-    // Is there another page of results?
-    // If so, grab the url and navigate to it then recursively call
-    // this function again
+    // If there is another page of results, grab the url and navigate
+    // to it then recursively call this function again
     const nextPageHandle = await page.$('.usa-pagination .page-next');
     if (nextPageHandle !== null) {
-        const currentUrl = await page.url();
-        const currentUrlParts = url.parse(currentUrl, true);
-        const nextPage = parseInt(currentUrlParts.query.page, 10) + 1;
-        currentUrlParts.query.page = nextPage;
-        // Delete the search key so the url format will ignore it
-        delete currentUrlParts.search;
-        const nextPageUrl = url.format(currentUrlParts);
-        logger.log('Starting search on page', nextPage);
+        const nextPageUrl = await getSearchUrlByPage(page, currentPageNumber + 1);
+        // Delay the next search by the global interval to prevent hammering
+        // the service too much
+        await waitForGlobalDelay(page);
         await goToUrl(page, nextPageUrl);
     }
-};
+}
 
 async function doSearchByKeyword(page, keyword) {
     // Start yer engines
     logger.log(`\nInitializing "${keyword}" search`);
 
     // Clear the results array for this search
-    RESULTS.splice(0, RESULTS.length);
+    RESULTS.entries.splice(0, RESULTS.entries.length);
+    // Reset our total pages
+    RESULTS.totalPages = 0;
 
     // Construct the url query parameters
     const lastPublishedDate = getLastPublishedDate();
@@ -113,7 +141,7 @@ async function doSearchByKeyword(page, keyword) {
     await goToUrl(page, searchUrl);
 
     // Export to CSV if enabled
-    exportToFile(keyword, RESULTS);
+    exportToFile(keyword, RESULTS.entries);
 }
 
 module.exports = {

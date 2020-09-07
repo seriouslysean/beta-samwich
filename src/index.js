@@ -32,7 +32,9 @@ async function init() {
             headless: true,
             // slowMo: 250,
         });
+        // Disable cache on the first request to prevent any empty results
         const page = await browser.newPage();
+        page.setCacheEnabled(false);
 
         for (let i = 0; i < keywords.length; i += 1) {
             // Allow await in loop so that all searches are done in order
