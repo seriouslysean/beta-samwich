@@ -42,6 +42,25 @@ function getKeywords() {
     return [keywords];
 }
 
+function getLastPublishedDate() {
+    const supportedRanges = [1, 2, 3];
+    const { lastPublishedDate } = args;
+
+    // If no last published date passed, default to 1
+    if (!lastPublishedDate) {
+        return supportedRanges[0];
+    }
+
+    // If a comma exists, there is more than one keyword
+    // We need to split them up
+    if (supportedRanges.includes(lastPublishedDate)) {
+        return lastPublishedDate;
+    }
+
+    // If the range is set but not supported, default to 1
+    return supportedRanges[0];
+}
+
 function getSearchQueryByKeyword(params) {
     return Object.keys(params)
         .map((k) => {
@@ -103,10 +122,11 @@ function exportToFile(keyword, results) {
 }
 
 module.exports = {
-    logger,
     args,
-    getKeywords,
-    getSearchQueryByKeyword,
-    resultsToCsv,
     exportToFile,
+    getKeywords,
+    getLastPublishedDate,
+    getSearchQueryByKeyword,
+    logger,
+    resultsToCsv,
 };

@@ -21,6 +21,10 @@ You can also search for multiple keywords instead by seaprating them with a comm
 
 * Run `npm run start -- --keywords "foo, bar, baz"` to do a search
 
+You can optionally set the amount of days to search, `1`, `2`, or `3`.
+
+* Run `npm run start -- --keywords "foo" --lastPublishedDate 3` to search the previous 3 days of a given keyword
+
 If exporting is enabled, all files will be saved in the `/output` folder, prefixed with the keyword used.
 
 ### Add Command to PATH (Optional)
