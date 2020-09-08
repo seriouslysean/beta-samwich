@@ -1,8 +1,9 @@
 const url = require('url');
 
 const { SEARCH_BASE_URL, SEARCH_GLOBAL_DELAY } = require('./config');
+const { logger, log, logWithNewLine } = require('./logger');
 const {
-    exportToFile, getLastPublishedDate, getSearchQueryByKeyword, logger,
+    exportToFile, getLastPublishedDate, getSearchQueryByKeyword,
 } = require('./utils');
 
 // Global container for ids so we can avoid addiing duplicates
@@ -13,7 +14,7 @@ const RESULTS = {
 // const RESULT_IDS = [];
 
 function waitForGlobalDelay(page) {
-    logger.log(`> Waiting ${SEARCH_GLOBAL_DELAY}ms for the global delay`);
+    logWithNewLine(`Waiting ${SEARCH_GLOBAL_DELAY}ms for the global delay`, true, true);
     return page.waitFor(SEARCH_GLOBAL_DELAY);
 }
 
@@ -45,7 +46,7 @@ async function goToUrl(page, searchUrl) {
         RESULTS.totalPages = lastPageHandle !== null
             ? await page.evaluate((el) => el.innerText, lastPageHandle) : 1;
     }
-    logger.log(`🔍 Searching page ${currentPageNumber} of ${RESULTS.totalPages}`);
+    log(`Searching page ${currentPageNumber} of ${RESULTS.totalPages}`, false);
 
     // Grab all the results on a search page (10 per page as far as I can tell)
     // and put them in the results array
@@ -96,6 +97,7 @@ async function goToUrl(page, searchUrl) {
     }
 
     // Add results to the global results array
+    log(`Scraping ${data.length} entries`, true);
     RESULTS.entries.push(...data);
 
     // If there is another page of results, grab the url and navigate
@@ -111,9 +113,6 @@ async function goToUrl(page, searchUrl) {
 }
 
 async function doSearchByKeyword(page, keyword) {
-    // Start yer engines
-    logger.log(`\nInitializing "${keyword}" search`);
-
     // Clear the results array for this search
     RESULTS.entries.splice(0, RESULTS.entries.length);
     // Reset our total pages
@@ -134,7 +133,8 @@ async function doSearchByKeyword(page, keyword) {
     const searchUrl = `${SEARCH_BASE_URL}/search?${searchQuery}`;
 
     // Go to the page
-    logger.log('Starting search on', searchUrl);
+    logger.log(`Initializing search for "${keyword}"`);
+    logWithNewLine(`${searchUrl}`, false, true);
     await goToUrl(page, searchUrl);
 
     // Export to CSV if enabled

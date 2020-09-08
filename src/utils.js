@@ -1,7 +1,8 @@
 const fs = require('fs');
 const minimist = require('minimist');
-
 const { format } = require('date-fns');
+
+const { logger } = require('./logger');
 
 const {
     // EXPORT_BY_KEYWORD,
@@ -9,8 +10,6 @@ const {
     EXPORT_PATH,
     EXPORT_RESULTS,
 } = require('./config');
-
-const logger = console;
 
 const args = minimist(process.argv.slice(2));
 
@@ -131,6 +130,5 @@ module.exports = {
     getKeywords,
     getLastPublishedDate,
     getSearchQueryByKeyword,
-    logger,
     resultsToCsv,
 };
