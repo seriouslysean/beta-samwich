@@ -1,6 +1,9 @@
 /* eslint-disable no-useless-escape */
 
-const sandwich = `
+const chalk = require('chalk');
+const pJson = require('../package.json');
+
+const sandwich = chalk.yellow(`
 
                           ____
               .----------'    '-.
@@ -10,11 +13,11 @@ const sandwich = `
           /  ' .       .     .  | |
          /.___________    '    / //
          |._          '------'| /|
-         '.............______.-' /
-         |-.                  | /
+         '.............______.-' /     beta.sam.gov cli
+         |-.                  | /      ${chalk.dim(pJson.version)}
          '"""""""""""""-.....-'
 
-`;
+`);
 
 module.exports = {
     sandwich,

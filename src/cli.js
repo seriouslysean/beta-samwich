@@ -1,8 +1,9 @@
 const puppeteer = require('puppeteer');
 
 const { SEARCH_BASE_URL } = require('./config');
+const { logAndExit } = require('./logger');
 const { doSearchByKeyword } = require('./search');
-const { logger, getKeywords } = require('./utils');
+const { getKeywords } = require('./utils');
 
 async function closeBrowserByReference(browser) {
     if (typeof browser.close === 'function') {
@@ -14,15 +15,13 @@ async function closeBrowserByReference(browser) {
 
 async function init() {
     if (!SEARCH_BASE_URL) {
-        logger.error('A Base Search Url is required to perform a search');
-        return process.exit(1);
+        return logAndExit('A Base Search Url is required to perform a search', 1);
     }
 
     const keywords = getKeywords();
 
     if (!keywords.length) {
-        logger.error('One or more keywords are required to perform a search');
-        process.exit(1);
+        return logAndExit('One or more keywords are required to perform a search', 1);
     }
 
     // Start 'em up
@@ -43,13 +42,12 @@ async function init() {
             await doSearchByKeyword(page, keywords[i]);
         }
     } catch (err) {
-        logger.error(err);
         await closeBrowserByReference(browser);
-        return process.exit(1);
+        return logAndExit(err, 1);
     }
 
     await closeBrowserByReference(browser);
-    return process.exit(0);
+    return logAndExit('Search finished successfully!', 0);
 }
 
 module.exports = init;
