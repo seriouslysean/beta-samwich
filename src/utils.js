@@ -2,7 +2,7 @@ const fs = require('fs');
 const minimist = require('minimist');
 const { format } = require('date-fns');
 
-const { logger } = require('./logger');
+const { log, logError } = require('./logger');
 
 const {
     // EXPORT_BY_KEYWORD,
@@ -101,12 +101,12 @@ function exportToFile(keyword, results) {
     }
 
     if (!Array.isArray(results)) {
-        logger.error('Results must be an array to export');
+        logError('Results must be an array to export');
         return;
     }
 
     if (!results.length) {
-        logger.error('Results are required to perform an export');
+        logError('Results are required to perform an export');
         return;
     }
 
@@ -117,10 +117,10 @@ function exportToFile(keyword, results) {
     const exportFile = `${EXPORT_PATH}/${formattedDate}-${formattedKeyword}-${EXPORT_FILENAME}.csv`;
     fs.writeFile(exportFile, resultsToCsv(results), (err) => {
         if (err) {
-            return logger.log('Unable to log search results to ', exportFile, err);
+            return logError(`Unable to log search results to ${exportFile}`);
         }
 
-        return logger.log('Logged search results to', exportFile);
+        return log(`Logged search results to ${exportFile}`);
     });
 }
 
