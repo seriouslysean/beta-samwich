@@ -1,7 +1,7 @@
 const puppeteer = require('puppeteer');
 
 const { SEARCH_BASE_URL } = require('./config');
-const { logAndExit } = require('./logger');
+const { logAndExit, logError } = require('./logger');
 const { doSearchByKeyword } = require('./search');
 const { getKeywords } = require('./utils');
 
@@ -36,10 +36,14 @@ async function init() {
         page.setCacheEnabled(false);
 
         for (let i = 0; i < keywords.length; i += 1) {
-            // Allow await in loop so that all searches are done in order
-            // This also ensures we aren't putting too much pressure on the site
-            // eslint-disable-next-line no-await-in-loop
-            await doSearchByKeyword(page, keywords[i]);
+            try {
+                // Allow await in loop so that all searches are done in order
+                // This also ensures we aren't putting too much pressure on the site
+                // eslint-disable-next-line no-await-in-loop
+                await doSearchByKeyword(page, keywords[i]);
+            } catch (err) {
+                logError(`${err}\n`, true);
+            }
         }
     } catch (err) {
         await closeBrowserByReference(browser);
@@ -47,7 +51,8 @@ async function init() {
     }
 
     await closeBrowserByReference(browser);
-    return logAndExit('Search finished successfully!', 0);
+
+    return logAndExit('Samwich CLI ran successfully!', 0);
 }
 
 module.exports = init;

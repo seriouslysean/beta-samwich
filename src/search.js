@@ -1,21 +1,32 @@
 const url = require('url');
 
-const { SEARCH_BASE_URL, SEARCH_GLOBAL_DELAY } = require('./config');
-const { logger, log, logWithNewLine } = require('./logger');
 const {
-    exportToFile, getLastPublishedDate, getSearchQueryByKeyword,
+    SEARCH_BASE_URL,
+    SEARCH_GLOBAL_DELAY,
+    SEARCH_MAX_RETRIES_ON_ERROR,
+} = require('./config');
+const {
+    log,
+    logError,
+    logInfo,
+} = require('./logger');
+const {
+    exportToFile,
+    getLastPublishedDate,
+    getSearchQueryByKeyword,
 } = require('./utils');
 
-// Global container for ids so we can avoid addiing duplicates
-const RESULTS = {
-    entries: [],
+// Global container for results
+const SEARCH = {
+    results: [],
     totalPages: 0,
+    retries: 0,
 };
-// const RESULT_IDS = [];
 
-function waitForGlobalDelay(page) {
-    logWithNewLine(`Waiting ${SEARCH_GLOBAL_DELAY}ms for the global delay`, true, true);
-    return page.waitFor(SEARCH_GLOBAL_DELAY);
+function waitForGlobalDelay(page, delayMultiplier = 1) {
+    const delay = SEARCH_GLOBAL_DELAY * delayMultiplier;
+    logInfo(`Waiting ${delay}ms\n`, true, true);
+    return page.waitFor(delay);
 }
 
 async function getSearchUrlByPage(page, pageNumber) {
@@ -42,18 +53,18 @@ async function goToUrl(page, searchUrl) {
     // How many pages did we actually find?
     const currentPageNumber = await getPageNumber(page);
     const lastPageHandle = await page.$('.usa-pagination li:nth-last-child(2) > a');
-    if (RESULTS.totalPages === 0) {
-        RESULTS.totalPages = lastPageHandle !== null
+    if (SEARCH.totalPages === 0) {
+        SEARCH.totalPages = lastPageHandle !== null
             ? await page.evaluate((el) => el.innerText, lastPageHandle) : 1;
     }
-    log(`Searching page ${currentPageNumber} of ${RESULTS.totalPages}`, false);
+    log(`Searching page ${currentPageNumber} of ${SEARCH.totalPages}`, false);
 
     // Grab all the results on a search page (10 per page as far as I can tell)
     // and put them in the results array
     // Declare document/window here to prevent eslint errors below
     let document;
     let window;
-    const data = (await page.evaluate(() => {
+    let data = (await page.evaluate(() => {
         const els = Array.from(document.querySelectorAll('#search-results .row'));
 
         // If there are no results, return empty handed
@@ -93,12 +104,18 @@ async function goToUrl(page, searchUrl) {
 
     // Add this page's results to the global results
     if (!data.length) {
-        throw new Error('Unable to find any results');
+        if (SEARCH.retries < SEARCH_MAX_RETRIES_ON_ERROR) {
+            SEARCH.retries += 1;
+            logError(`No results found, retrying ${SEARCH.retries}/${SEARCH_MAX_RETRIES_ON_ERROR}`, true, true);
+            await waitForGlobalDelay(page, SEARCH.retries);
+            return goToUrl(page, searchUrl);
+        }
+        throw new Error('Max attempts failed, stopping search');
     }
 
     // Add results to the global results array
-    log(`Scraping ${data.length} entries`, true);
-    RESULTS.entries.push(...data);
+    logInfo(`Scraping ${data.length} entries`, true, true);
+    SEARCH.results.push(...data);
 
     // If there is another page of results, grab the url and navigate
     // to it then recursively call this function again
@@ -108,15 +125,19 @@ async function goToUrl(page, searchUrl) {
         // Delay the next search by the global interval to prevent hammering
         // the service too much
         await waitForGlobalDelay(page);
-        await goToUrl(page, nextPageUrl);
+        return goToUrl(page, nextPageUrl);
     }
+
+    return data;
 }
 
 async function doSearchByKeyword(page, keyword) {
     // Clear the results array for this search
-    RESULTS.entries.splice(0, RESULTS.entries.length);
+    SEARCH.results.splice(0, SEARCH.results.length);
     // Reset our total pages
-    RESULTS.totalPages = 0;
+    SEARCH.totalPages = 0;
+    // Reset retry count
+    SEARCH.retries = 0;
 
     // Construct the url query parameters
     const lastPublishedDate = getLastPublishedDate();
@@ -133,12 +154,14 @@ async function doSearchByKeyword(page, keyword) {
     const searchUrl = `${SEARCH_BASE_URL}/search?${searchQuery}`;
 
     // Go to the page
-    logger.log(`Initializing search for "${keyword}"`);
-    logWithNewLine(`${searchUrl}`, false, true);
+    log(`Initializing search for "${keyword}"`);
+    log(`${searchUrl}\n`, true);
     await goToUrl(page, searchUrl);
 
+    log('\nSearch complete!');
+
     // Export to CSV if enabled
-    exportToFile(keyword, RESULTS.entries);
+    exportToFile(keyword, SEARCH.results);
 }
 
 module.exports = {

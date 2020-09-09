@@ -3,14 +3,21 @@ const sym = require('log-symbols');
 
 const logger = console;
 
-function log(msg, icon = false, dim = false) {
+function log(msg, dim) {
+    const formattedMsg = dim ? chalk.dim(msg) : msg;
+    return logger.log(formattedMsg);
+}
+
+function logInfo(msg, icon = false, dim = false) {
     const msgWithIcon = icon ? `${sym.info} ${msg}` : msg;
     const formattedMsg = dim ? chalk.dim(msgWithIcon) : msgWithIcon;
     return logger.log(`${formattedMsg}`);
 }
 
-function logWithNewLine(msg, icon = false, dim = false) {
-    return log(`${msg}\n`, icon, dim);
+function logError(msg, icon = false, dim = false) {
+    const msgWithIcon = icon ? `${sym.error} ${msg}` : msg;
+    const formattedMsg = dim ? chalk.dim(msgWithIcon) : msgWithIcon;
+    return logger.error(`${formattedMsg}`);
 }
 
 function logAndExit(msg, code) {
@@ -23,6 +30,7 @@ function logAndExit(msg, code) {
 module.exports = {
     logger,
     log,
+    logInfo,
+    logError,
     logAndExit,
-    logWithNewLine,
 };
