@@ -117,15 +117,26 @@ function exportToFile(keyword, results) {
     const exportFile = `${EXPORT_PATH}/${formattedDate}-${formattedKeyword}-${EXPORT_FILENAME}.csv`;
     fs.writeFile(exportFile, resultsToCsv(results), (err) => {
         if (err) {
-            return logError(`Unable to log search results to ${exportFile}`);
+            return logError(`Unable to log search results to ${exportFile}\n`);
         }
 
-        return log(`Logged search results to ${exportFile}`);
+        return log(`Logged search results to ${exportFile}\n`);
     });
+}
+
+function convertMsToSeconds(ms, precision = 2) {
+    return (ms / 1000).toFixed(precision);
+}
+
+function convertHrTimeToSeconds(hrtime, precision = 2) {
+    const ms = hrtime[0] * 1e3 + hrtime[1] * 1e-6;
+    return convertMsToSeconds(ms, precision);
 }
 
 module.exports = {
     args,
+    convertHrTimeToSeconds,
+    convertMsToSeconds,
     exportToFile,
     getKeywords,
     getLastPublishedDate,
