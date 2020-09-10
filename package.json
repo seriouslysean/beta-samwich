@@ -1,7 +1,7 @@
 {
   "name": "beta-samwich",
   "description": "Search for multiple keywords on beta.sam.gov and dedupe and export the results",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "author": "Sean Kennedy",
   "bin": {
     "samwich": "./index.js"
