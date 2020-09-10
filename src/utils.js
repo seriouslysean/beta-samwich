@@ -1,4 +1,6 @@
 const fs = require('fs');
+
+const chalk = require('chalk');
 const minimist = require('minimist');
 const { format } = require('date-fns');
 
@@ -13,8 +15,28 @@ const {
 
 const args = minimist(process.argv.slice(2));
 
+const isHelpCmd = args._[0] === 'help' || Object.keys(args).find((k) => k === 'help' || k === 'h');
+
 function toKebabCase(s) {
     return s.replace(/\s+/g, '-').toLowerCase();
+}
+
+function showHelpMessage() {
+    log(`${chalk.yellow(chalk.bold('USAGE'))}
+  samwich <options>
+
+${chalk.yellow(chalk.bold('EXAMPLES'))}
+Search for the keyword plug
+  samwich --keywords "plug"
+
+Search for the keyword assembly and plug over the last 2 days
+  samwich --keywords "assembly,plug" --lastPublishedDate 2
+
+${chalk.yellow(chalk.bold('OPTIONS'))}
+  --keywords             Keywords to search for, quoted and comma delimited ("plug", "assembly,plug", etc)
+  --lastPublishedDate    How many days back to search (1, 2 or 3)
+`);
+    process.exit(0);
 }
 
 /**
@@ -141,5 +163,7 @@ module.exports = {
     getKeywords,
     getLastPublishedDate,
     getSearchQueryByKeyword,
+    isHelpCmd,
     resultsToCsv,
+    showHelpMessage,
 };

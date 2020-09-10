@@ -2,9 +2,17 @@ const chalk = require('chalk');
 const puppeteer = require('puppeteer');
 
 const { SEARCH_BASE_URL } = require('./config');
-const { logAndExit, logError } = require('./logger');
+const {
+    logAndExit,
+    logError,
+} = require('./logger');
 const { doSearchByKeyword } = require('./search');
-const { convertHrTimeToSeconds, getKeywords } = require('./utils');
+const {
+    convertHrTimeToSeconds,
+    getKeywords,
+    isHelpCmd,
+    showHelpMessage,
+} = require('./utils');
 
 async function closeBrowserByReference(browser) {
     if (typeof browser.close === 'function') {
@@ -15,6 +23,10 @@ async function closeBrowserByReference(browser) {
 }
 
 async function init() {
+    if (isHelpCmd) {
+        return showHelpMessage();
+    }
+
     if (!SEARCH_BASE_URL) {
         return logAndExit('A Base Search Url is required to perform a search', 1);
     }
