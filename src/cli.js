@@ -1,9 +1,10 @@
+const chalk = require('chalk');
 const puppeteer = require('puppeteer');
 
 const { SEARCH_BASE_URL } = require('./config');
 const { logAndExit, logError } = require('./logger');
 const { doSearchByKeyword } = require('./search');
-const { getKeywords } = require('./utils');
+const { convertHrTimeToSeconds, getKeywords } = require('./utils');
 
 async function closeBrowserByReference(browser) {
     if (typeof browser.close === 'function') {
@@ -23,6 +24,8 @@ async function init() {
     if (!keywords.length) {
         return logAndExit('One or more keywords are required to perform a search', 1);
     }
+
+    const startTime = process.hrtime();
 
     // Start 'em up
     let browser;
@@ -52,7 +55,9 @@ async function init() {
 
     await closeBrowserByReference(browser);
 
-    return logAndExit('Samwich CLI ran successfully!', 0);
+    const timeDifference = process.hrtime(startTime);
+    const timeDifferenceString = chalk.blue(`(${convertHrTimeToSeconds(timeDifference)}s)`);
+    return logAndExit(`Samwich CLI ran successfully! ${timeDifferenceString}`, 0);
 }
 
 module.exports = init;
