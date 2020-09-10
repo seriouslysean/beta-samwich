@@ -1,3 +1,9 @@
+/**
+ * Closes a puppeteer browser instance by reference
+ *
+ * @param   {string}    key name of environment variable
+ * @returns {number}    environment variable as a number
+ */
 function getValueAsInt(key) {
     const env = process.env[key];
 

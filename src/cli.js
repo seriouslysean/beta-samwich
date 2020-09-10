@@ -14,6 +14,12 @@ const {
     showHelpMessage,
 } = require('./utils');
 
+/**
+ * Closes a puppeteer browser instance by reference
+ *
+ * @param   {object}    browser puppeteer browser
+ * @returns {Promise}   true or false
+ */
 async function closeBrowserByReference(browser) {
     if (typeof browser.close === 'function') {
         return browser.close();
@@ -22,6 +28,11 @@ async function closeBrowserByReference(browser) {
     return false;
 }
 
+/**
+ * Initialize the beta.sam cli
+ *
+ * @returns {Promise}   true or false
+ */
 async function init() {
     if (isHelpCmd) {
         return showHelpMessage();
