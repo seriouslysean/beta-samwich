@@ -7,6 +7,7 @@ const {
     SEARCH_GLOBAL_DELAY,
     SEARCH_MAX_RETRIES_ON_ERROR,
 } = require('./config');
+const { exportToFile } = require('./export');
 const {
     log,
     logError,
@@ -15,7 +16,6 @@ const {
 const {
     convertHrTimeToSeconds,
     convertMsToSeconds,
-    exportToFile,
     getLastPublishedDate,
     getSearchQueryByKeyword,
 } = require('./utils');

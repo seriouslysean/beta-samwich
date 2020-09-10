@@ -1,25 +1,11 @@
-const fs = require('fs');
-
 const chalk = require('chalk');
 const minimist = require('minimist');
-const { format } = require('date-fns');
 
-const { log, logError } = require('./logger');
-
-const {
-    // EXPORT_BY_KEYWORD,
-    EXPORT_FILENAME,
-    EXPORT_PATH,
-    EXPORT_RESULTS,
-} = require('./config');
+const { log } = require('./logger');
 
 const args = minimist(process.argv.slice(2));
 
 const isHelpCmd = args._[0] === 'help' || Object.keys(args).find((k) => k === 'help' || k === 'h');
-
-function toKebabCase(s) {
-    return s.replace(/\s+/g, '-').toLowerCase();
-}
 
 function showHelpMessage() {
     log(`${chalk.yellow(chalk.bold('USAGE'))}
@@ -94,58 +80,6 @@ function getSearchQueryByKeyword(params) {
         .join('&');
 }
 
-/**
- * Takes an array of formatted search results and turns
- * it in to a comma separated file
- *
- * @param {Object} results
- */
-function resultsToCsv(results) {
-    // CSV headings from result key names
-    const headings = Object.keys(results[0])
-        .map((r) => `"${r}"`)
-        .join(',');
-
-    // CSV rows from results
-    const data = results
-        .map((result) => Object.values(result)
-            .map((r) => `"${r}"`)
-            .join(','))
-        .join('\n');
-
-    return `${headings}\n${data}`;
-}
-
-function exportToFile(keyword, results) {
-    if (!EXPORT_RESULTS) {
-        // Exporting not enabled
-        return;
-    }
-
-    if (!Array.isArray(results)) {
-        logError('Results must be an array to export');
-        return;
-    }
-
-    if (!results.length) {
-        logError('Results are required to perform an export');
-        return;
-    }
-
-    // TODO use EXPORT_BY_KEYWORD to export one file or multiple files
-
-    const formattedDate = format(new Date(), 'ddMMyyyy');
-    const formattedKeyword = toKebabCase(keyword);
-    const exportFile = `${EXPORT_PATH}/${formattedDate}-${formattedKeyword}-${EXPORT_FILENAME}.csv`;
-    fs.writeFile(exportFile, resultsToCsv(results), (err) => {
-        if (err) {
-            return logError(`Unable to log search results to ${exportFile}\n`);
-        }
-
-        return log(`Logged search results to ${exportFile}\n`);
-    });
-}
-
 function convertMsToSeconds(ms, precision = 2) {
     return (ms / 1000).toFixed(precision);
 }
@@ -159,11 +93,9 @@ module.exports = {
     args,
     convertHrTimeToSeconds,
     convertMsToSeconds,
-    exportToFile,
     getKeywords,
     getLastPublishedDate,
     getSearchQueryByKeyword,
     isHelpCmd,
-    resultsToCsv,
     showHelpMessage,
 };
