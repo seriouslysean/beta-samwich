@@ -1,5 +1,7 @@
 const url = require('url');
 
+const chalk = require('chalk');
+
 const {
     SEARCH_BASE_URL,
     SEARCH_GLOBAL_DELAY,
@@ -11,6 +13,8 @@ const {
     logInfo,
 } = require('./logger');
 const {
+    convertHrTimeToSeconds,
+    convertMsToSeconds,
     exportToFile,
     getLastPublishedDate,
     getSearchQueryByKeyword,
@@ -21,11 +25,12 @@ const SEARCH = {
     results: [],
     totalPages: 0,
     retries: 0,
+    timeSpent: null,
 };
 
 function waitForGlobalDelay(page, delayMultiplier = 1) {
     const delay = SEARCH_GLOBAL_DELAY * delayMultiplier;
-    logInfo(`Waiting ${delay}ms\n`, true, true);
+    logInfo(`Waiting ${convertMsToSeconds(delay, 0)}s\n`, true, true);
     return page.waitFor(delay);
 }
 
@@ -45,6 +50,7 @@ async function getPageNumber(page) {
 }
 
 async function goToUrl(page, searchUrl) {
+    const startTime = process.hrtime();
     // Load the initial search page
     // Search results aren't visible until the requests are finished
     // Requires the waitUntil because beta.sam is a SPA and relies on javascript
@@ -64,7 +70,7 @@ async function goToUrl(page, searchUrl) {
     // Declare document/window here to prevent eslint errors below
     let document;
     let window;
-    let data = (await page.evaluate(() => {
+    const data = (await page.evaluate(() => {
         const els = Array.from(document.querySelectorAll('#search-results .row'));
 
         // If there are no results, return empty handed
@@ -114,7 +120,9 @@ async function goToUrl(page, searchUrl) {
     }
 
     // Add results to the global results array
-    logInfo(`Scraping ${data.length} entries`, true, true);
+    const timeDifference = process.hrtime(startTime);
+    const timeDifferenceString = chalk.blue(`(${convertHrTimeToSeconds(timeDifference)}s)`);
+    logInfo(`Scraped ${data.length} entries ${timeDifferenceString}`, true, true);
     SEARCH.results.push(...data);
 
     // If there is another page of results, grab the url and navigate
@@ -131,14 +139,20 @@ async function goToUrl(page, searchUrl) {
     return data;
 }
 
-async function doSearchByKeyword(page, keyword) {
+function resetSearch() {
     // Clear the results array for this search
     SEARCH.results.splice(0, SEARCH.results.length);
     // Reset our total pages
     SEARCH.totalPages = 0;
     // Reset retry count
     SEARCH.retries = 0;
+    // Reset timer
+    SEARCH.timeSpent = null;
+}
 
+async function doSearchByKeyword(page, keyword) {
+    const startTime = process.hrtime();
+    resetSearch();
     // Construct the url query parameters
     const lastPublishedDate = getLastPublishedDate();
     const searchQuery = getSearchQueryByKeyword({
@@ -158,7 +172,10 @@ async function doSearchByKeyword(page, keyword) {
     log(`${searchUrl}\n`, true);
     await goToUrl(page, searchUrl);
 
-    log('\nSearch complete!');
+    const timeDifference = process.hrtime(startTime);
+    const timeDifferenceString = chalk.blue(`(${convertHrTimeToSeconds(timeDifference)}s)`);
+    log('');
+    log(`"${keyword}" search complete! ${timeDifferenceString}\n`);
 
     // Export to CSV if enabled
     exportToFile(keyword, SEARCH.results);
