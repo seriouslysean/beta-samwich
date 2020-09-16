@@ -34,6 +34,7 @@ Search for the keyword assembly and plug over the last 2 days
 
 ${chalk.yellow(chalk.bold('OPTIONS'))}
   --keywords             Keywords to search for, quoted and comma delimited ("plug", "assembly,plug", etc)
+  --daics                NAICS to search for, quoted and comma delimited ("621511", "621511,21", etc)
   --lastPublishedDate    How many days back to search (1, 2 or 3)
 `);
     process.exit(0);
@@ -44,22 +45,22 @@ ${chalk.yellow(chalk.bold('OPTIONS'))}
  *
  * @return {Array} keywords
  */
-function getKeywords() {
-    const { keywords } = args;
+function parseCommaSeparatedArgument(argName) {
+    const terms = args[argName] ? `${args[argName]}` : '';
 
-    // If no keywords found, default to an empty array
-    if (!keywords) {
+    // If no terms found, default to an empty array
+    if (!terms) {
         return [];
     }
 
-    // If a comma exists, there is more than one keyword
+    // If a comma exists, there is more than one term
     // We need to split them up
-    if (keywords.includes(',')) {
-        return keywords.split(',').map((k) => k.trim());
+    if (terms.includes(',')) {
+        return terms.split(',').map((k) => k.trim());
     }
 
-    // Only one keyword
-    return [keywords];
+    // Only one term
+    return [terms];
 }
 
 function getLastPublishedDate() {
@@ -81,7 +82,7 @@ function getLastPublishedDate() {
     return supportedRanges[0];
 }
 
-function getSearchQueryByKeyword(params) {
+function constructSearchQuery(params) {
     return Object.keys(params)
         .map((k) => {
             let value = encodeURIComponent(params[k]);
@@ -116,7 +117,7 @@ function resultsToCsv(results) {
     return `${headings}\n${data}`;
 }
 
-function exportToFile(keyword, results) {
+function exportToFile(termName, termValue, results) {
     if (!EXPORT_RESULTS) {
         // Exporting not enabled
         return;
@@ -135,8 +136,8 @@ function exportToFile(keyword, results) {
     // TODO use EXPORT_BY_KEYWORD to export one file or multiple files
 
     const formattedDate = format(new Date(), 'ddMMyyyy');
-    const formattedKeyword = toKebabCase(keyword);
-    const exportFile = `${EXPORT_PATH}/${formattedDate}-${formattedKeyword}-${EXPORT_FILENAME}.csv`;
+    const formattedTerm = toKebabCase(`${termName}-${termValue}`);
+    const exportFile = `${EXPORT_PATH}${formattedDate}-${formattedTerm}-${EXPORT_FILENAME}.csv`;
     fs.writeFile(exportFile, resultsToCsv(results), (err) => {
         if (err) {
             return logError(`Unable to log search results to ${exportFile}\n`);
@@ -157,13 +158,13 @@ function convertHrTimeToSeconds(hrtime, precision = 2) {
 
 module.exports = {
     args,
+    constructSearchQuery,
     convertHrTimeToSeconds,
     convertMsToSeconds,
     exportToFile,
-    getKeywords,
     getLastPublishedDate,
-    getSearchQueryByKeyword,
     isHelpCmd,
+    parseCommaSeparatedArgument,
     resultsToCsv,
     showHelpMessage,
 };

@@ -17,7 +17,7 @@ const {
     convertMsToSeconds,
     exportToFile,
     getLastPublishedDate,
-    getSearchQueryByKeyword,
+    constructSearchQuery,
 } = require('./utils');
 
 // Global container for results
@@ -49,7 +49,7 @@ async function getPageNumber(page) {
     return parseInt(currentUrlParts.query.page, 10);
 }
 
-async function goToUrl(page, searchUrl) {
+async function goToUrl(page, termName, termValue, searchUrl) {
     const startTime = process.hrtime();
     // Load the initial search page
     // Search results aren't visible until the requests are finished
@@ -70,7 +70,7 @@ async function goToUrl(page, searchUrl) {
     // Declare document/window here to prevent eslint errors below
     let document;
     let window;
-    const data = (await page.evaluate(() => {
+    const data = (await page.evaluate((params) => {
         const els = Array.from(document.querySelectorAll('#search-results .row'));
 
         // If there are no results, return empty handed
@@ -81,19 +81,17 @@ async function goToUrl(page, searchUrl) {
         // For each item, create a new object with the data we need
         const rows = [];
         els.forEach((el) => {
-            const { hostname, protocol, search: queryString } = window.location;
+            const { hostname, protocol } = window.location;
             const host = `${protocol}//${hostname}`;
             const aside = el.querySelector('.four.wide.column .list');
             const href = el.querySelector('.opportunity-title a').getAttribute('href');
             const id = href.split('/')[2];
-            // Get the keyword from the url, strip double quotes
-            const urlParams = new URLSearchParams(queryString);
-            const keyword = urlParams.get('keywords').replace(/['"]+/g, '');
 
             // TODO dedupe
 
             rows.push({
-                keyword,
+                termName: params.termName,
+                termValue: params.termValue,
                 category: aside.querySelector('li:nth-child(1)').innerText,
                 title: el.querySelector('.opportunity-title').innerText,
                 noticeId: aside.querySelector('li:nth-child(2) span').innerText,
@@ -106,15 +104,21 @@ async function goToUrl(page, searchUrl) {
             });
         });
         return rows;
-    })) || [];
+    }, { termName, termValue })) || [];
+
+    // Did this search have any results?
+    const hasZeroResults = await page.$('.search-inactive-results');
+    if (hasZeroResults !== null) {
+        throw new Error('Search produced zero results');
+    }
 
     // Add this page's results to the global results
     if (!data.length) {
         if (SEARCH.retries < SEARCH_MAX_RETRIES_ON_ERROR) {
             SEARCH.retries += 1;
-            logError(`No results found, retrying ${SEARCH.retries}/${SEARCH_MAX_RETRIES_ON_ERROR}`, true, true);
+            logError(`No scraped results, retrying ${SEARCH.retries}/${SEARCH_MAX_RETRIES_ON_ERROR}`, true, true);
             await waitForGlobalDelay(page, SEARCH.retries);
-            return goToUrl(page, searchUrl);
+            return goToUrl(page, termName, termValue, searchUrl);
         }
         throw new Error('Max attempts failed, stopping search');
     }
@@ -133,7 +137,7 @@ async function goToUrl(page, searchUrl) {
         // Delay the next search by the global interval to prevent hammering
         // the service too much
         await waitForGlobalDelay(page);
-        return goToUrl(page, nextPageUrl);
+        return goToUrl(page, termName, termValue, nextPageUrl);
     }
 
     return data;
@@ -150,13 +154,16 @@ function resetSearch() {
     SEARCH.timeSpent = null;
 }
 
-async function doSearchByKeyword(page, keyword) {
+async function doSearchByParam(page, termName, termValue) {
     const startTime = process.hrtime();
     resetSearch();
     // Construct the url query parameters
     const lastPublishedDate = getLastPublishedDate();
-    const searchQuery = getSearchQueryByKeyword({
-        keywords: `${keyword}`,
+    const searchQuery = constructSearchQuery({
+        ...(termName !== 'keywords' ? {
+            keywords: '',
+        } : {}),
+        [termName]: `${termValue}`,
         sort: '-modifiedDate',
         index: 'opp',
         is_active: 'true',
@@ -168,19 +175,19 @@ async function doSearchByKeyword(page, keyword) {
     const searchUrl = `${SEARCH_BASE_URL}/search?${searchQuery}`;
 
     // Go to the page
-    log(`Initializing search for "${keyword}"`);
+    log(`Initializing ${termName} search for "${termValue}"`);
     log(`${searchUrl}\n`, true);
-    await goToUrl(page, searchUrl);
+    await goToUrl(page, termName, termValue, searchUrl);
 
     const timeDifference = process.hrtime(startTime);
     const timeDifferenceString = chalk.blue(`(${convertHrTimeToSeconds(timeDifference)}s)`);
     log('');
-    log(`"${keyword}" search complete! ${timeDifferenceString}\n`);
+    log(`${termName} search for "${termValue}" complete! ${timeDifferenceString}\n`);
 
     // Export to CSV if enabled
-    exportToFile(keyword, SEARCH.results);
+    exportToFile(termName, termValue, SEARCH.results);
 }
 
 module.exports = {
-    doSearchByKeyword,
+    doSearchByParam,
 };
