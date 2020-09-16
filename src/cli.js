@@ -2,15 +2,17 @@ const chalk = require('chalk');
 const puppeteer = require('puppeteer');
 
 const { SEARCH_BASE_URL } = require('./config');
+const { ARG_NAME_KEYWORDS, ARG_NAME_NAICS } = require('./constants');
 const {
     logAndExit,
     logError,
 } = require('./logger');
-const { doSearchByKeyword } = require('./search');
+const search = require('./search');
+const { doSearchByParam } = require('./search');
 const {
     convertHrTimeToSeconds,
-    getKeywords,
     isHelpCmd,
+    parseCommaSeparatedArgument,
     showHelpMessage,
 } = require('./utils');
 
@@ -31,10 +33,18 @@ async function init() {
         return logAndExit('A Base Search Url is required to perform a search', 1);
     }
 
-    const keywords = getKeywords();
+    // Get all search params (and strip empty terms)
+    const searches = [
+        ARG_NAME_KEYWORDS,
+        ARG_NAME_NAICS,
+    ].reduce((acc, termName) => {
+        const terms = parseCommaSeparatedArgument(termName);
+        terms.forEach((termValue) => acc.push({ termName, termValue }));
+        return acc;
+    }, []);
 
-    if (!keywords.length) {
-        return logAndExit('One or more keywords are required to perform a search', 1);
+    if (!searches.length) {
+        return logAndExit('One or more parameters are required to perform a search', 1);
     }
 
     const startTime = process.hrtime();
@@ -50,12 +60,15 @@ async function init() {
         const page = await browser.newPage();
         page.setCacheEnabled(false);
 
-        for (let i = 0; i < keywords.length; i += 1) {
+        // Search for each set of terms
+        // Must use for loop so we actually wait for the search to finish
+        for (let i = 0; i < searches.length; i += 1) {
             try {
+                const { termName, termValue } = searches[i];
                 // Allow await in loop so that all searches are done in order
                 // This also ensures we aren't putting too much pressure on the site
                 // eslint-disable-next-line no-await-in-loop
-                await doSearchByKeyword(page, keywords[i]);
+                await doSearchByParam(page, termName, termValue);
             } catch (err) {
                 logError(`${err}\n`, true);
             }
